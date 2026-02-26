@@ -1,27 +1,29 @@
 import { Request, Response, NextFunction } from "express";
 
-// ─── Shared enums ────────────────────────────────────────────────────────────
+// ── Shared enums ────────────────────────────────────────────────────────────
 
 export type OrderStatus = "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled";
 export type CustomerStatus = "Active" | "Inactive";
 export type CollectionStatus = "active" | "inactive";
 export type SortOrder = "manual" | "best-selling" | "price-asc" | "price-desc" | "newest" | "alpha-asc";
+export type UserRole = "admin" | "staff" | "user";
 
-// ─── JWT payload ──────────────────────────────────────────────────────────────
+// ── JWT payload ──────────────────────────────────────────────────────────────
 
 export interface JwtPayload {
     id: string;
     email: string;
-    role: "admin" | "staff";
+    role: UserRole;
+    iat?: number;   // issued at (added by jwt.verify)
 }
 
-// ─── Authenticated request ────────────────────────────────────────────────────
+// ── Authenticated request ────────────────────────────────────────────────────
 
 export interface AuthRequest extends Request {
     user?: JwtPayload;
 }
 
-// ─── Controller handler type ──────────────────────────────────────────────────
+// ── Controller handler type ──────────────────────────────────────────────────
 
 export type AsyncHandler = (
     req: Request,
@@ -29,7 +31,7 @@ export type AsyncHandler = (
     next: NextFunction
 ) => Promise<void>;
 
-// ─── Pagination ───────────────────────────────────────────────────────────────
+// ── Pagination ───────────────────────────────────────────────────────────────
 
 export interface PaginationQuery {
     page?: string;
