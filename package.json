@@ -1,0 +1,20 @@
+{
+  "name": "craftopia__bn",
+  "version": "1.0.0",
+  "description": "Craftopia e-commerce REST API — Node.js, TypeScript, Express, MongoDB",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "seed": "tsx src/config/seed.ts"
+  },
+  "keywords": [
+    "craftopia",
+    "api",
+    "express",
+    "mongodb"
+  ],
+  "author": "Craftopia",
+  "license": "ISC"
+}
