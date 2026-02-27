@@ -48,11 +48,35 @@ app.use(
     })
 );
 
-// 3. CORS — only allow our frontend origin
+// 3. CORS — allow frontend origin(s)
+//    Dev:  localhost on any port + any private LAN IP
+//    Prod: strict whitelist from CLIENT_URL (comma-separated)
+
+const ALLOWED_ORIGINS = (process.env.CLIENT_URL ?? "http://localhost:3002")
+    .split(",")
+    .map((o) => o.trim());
+
+const isDev = process.env.NODE_ENV !== "production";
+
+// Private LAN pattern: 192.168.x.x | 10.x.x.x | 172.16-31.x.x
+const LAN_PATTERN =
+    /^https?:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
+const LOCALHOST_PATTERN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+
 app.use(
     cors({
-        origin: process.env.CLIENT_URL ?? "http://localhost:3002",
-        credentials: true,                    // allow cookies
+        origin: (requestOrigin, callback) => {
+            // Same-origin / server-to-server (no origin header)
+            if (!requestOrigin) return callback(null, true);
+            // Explicit whitelist
+            if (ALLOWED_ORIGINS.includes(requestOrigin)) return callback(null, true);
+            // Dev: also allow localhost + LAN IPs
+            if (isDev && (LOCALHOST_PATTERN.test(requestOrigin) || LAN_PATTERN.test(requestOrigin))) {
+                return callback(null, true);
+            }
+            callback(new Error(`CORS: origin '${requestOrigin}' not allowed`));
+        },
+        credentials: true,
         methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
         allowedHeaders: ["Content-Type", "Authorization"],
     })
