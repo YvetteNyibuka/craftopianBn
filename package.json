@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
+    "postbuild": "test -f dist/index.js && echo 'Build successful: dist/index.js found' || echo 'Build failed: dist/index.js not found'",
     "start": "node dist/index.js",
     "seed": "tsx src/config/seed.ts"
   },
