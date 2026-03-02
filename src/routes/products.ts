@@ -1,7 +1,11 @@
 import { Router } from "express";
 import {
-    getProducts, getProduct, createProduct,
-    updateProduct, deleteProduct, getLowStock,
+  getProducts,
+  getProduct,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  getLowStock,
 } from "../controllers/productController";
 import { protect, restrictTo } from "../middleware/auth";
 
@@ -15,7 +19,7 @@ router.get("/:slug", getProduct);
 // Admin/staff — create & update
 router.use(protect);
 router.post("/", restrictTo("admin", "staff"), createProduct);
-router.patch("/:id", restrictTo("admin", "staff"), updateProduct);
+router.put("/:id", restrictTo("admin", "staff"), updateProduct);
 router.delete("/:id", restrictTo("admin"), deleteProduct);
 
 export default router;

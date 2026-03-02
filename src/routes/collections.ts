@@ -1,7 +1,10 @@
 import { Router } from "express";
 import {
-    getCollections, getCollection, createCollection,
-    updateCollection, deleteCollection,
+  getCollections,
+  getCollection,
+  createCollection,
+  updateCollection,
+  deleteCollection,
 } from "../controllers/collectionController";
 import { protect, restrictTo } from "../middleware/auth";
 
@@ -14,7 +17,7 @@ router.get("/:slug", getCollection);
 // Admin only — create, update, delete
 router.use(protect);
 router.post("/", restrictTo("admin", "staff"), createCollection);
-router.patch("/:id", restrictTo("admin", "staff"), updateCollection);
+router.put("/:id", restrictTo("admin", "staff"), updateCollection);
 router.delete("/:id", restrictTo("admin"), deleteCollection);
 
 export default router;
