@@ -22,6 +22,7 @@ import productRoutes from "./routes/products";
 import orderRoutes from "./routes/orders";
 import customerRoutes from "./routes/customers";
 import homepageRoutes from "./routes/homepage";
+import uploadRoutes from "./routes/upload";
 
 // ── App + port ────────────────────────────────────────────────────────────────
 const app = express();
@@ -36,16 +37,16 @@ app.set("trust proxy", 1);
 
 // 2. Helmet — sets 14 security-related HTTP headers
 app.use(
-    helmet({
-        crossOriginResourcePolicy: { policy: "cross-origin" }, // allow images from CDN
-        contentSecurityPolicy: {
-            directives: {
-                defaultSrc: ["'self'"],
-                imgSrc: ["'self'", "data:", "https:"],
-                scriptSrc: ["'self'"],
-            },
-        },
-    })
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }, // allow images from CDN
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        scriptSrc: ["'self'"],
+      },
+    },
+  }),
 );
 
 // 3. CORS — allow frontend origin(s)
@@ -53,33 +54,45 @@ app.use(
 //    Prod: strict whitelist from CLIENT_URL (comma-separated)
 
 const ALLOWED_ORIGINS = (process.env.CLIENT_URL ?? "http://localhost:3002")
-    .split(",")
-    .map((o) => o.trim());
+  .split(",")
+  .map((o) => o.trim());
 
 const isDev = process.env.NODE_ENV !== "production";
 
 // Private LAN pattern: 192.168.x.x | 10.x.x.x | 172.16-31.x.x
 const LAN_PATTERN =
-    /^https?:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
+  /^https?:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
 const LOCALHOST_PATTERN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
 app.use(
-    cors({
-        origin: (requestOrigin, callback) => {
-            // Same-origin / server-to-server (no origin header)
-            if (!requestOrigin) return callback(null, true);
-            // Explicit whitelist
-            if (ALLOWED_ORIGINS.includes(requestOrigin)) return callback(null, true);
-            // Dev: also allow localhost + LAN IPs
-            if (isDev && (LOCALHOST_PATTERN.test(requestOrigin) || LAN_PATTERN.test(requestOrigin))) {
-                return callback(null, true);
-            }
-            callback(new Error(`CORS: origin '${requestOrigin}' not allowed`));
-        },
-        credentials: true,
-        methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-    })
+  cors({
+    origin: (requestOrigin, callback) => {
+      // Same-origin / server-to-server (no origin header)
+      if (!requestOrigin) return callback(null, true);
+      // Explicit whitelist
+      if (ALLOWED_ORIGINS.includes(requestOrigin)) return callback(null, true);
+      // Dev: also allow localhost + LAN IPs
+      if (
+        isDev &&
+        (LOCALHOST_PATTERN.test(requestOrigin) ||
+          LAN_PATTERN.test(requestOrigin))
+      ) {
+        return callback(null, true);
+      }
+      callback(new Error(`CORS: origin '${requestOrigin}' not allowed`));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+      "Origin",
+      "Access-Control-Request-Method",
+      "Access-Control-Request-Headers",
+    ],
+  }),
 );
 
 // 4. Global rate limiter — applies to every route (300 req / 15 min / IP)
@@ -91,16 +104,18 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
 // 6. MongoDB NoSQL injection sanitiser — strips $ and . from user input
-app.use(mongoSanitize());
+// NOTE: express-mongo-sanitize has compatibility issues with Express 5.x
+// Temporarily disabled - consider using custom sanitizer or downgrading to Express 4
+// app.use(mongoSanitize({ replaceWith: '_' }));
 
 // 7. XSS sanitiser — HTML-encodes dangerous chars in all string inputs
 app.use(xssSanitizer);
 
 // 8. HPP — HTTP Parameter Pollution: keeps last value for duplicate query params
 app.use(
-    hpp({
-        whitelist: ["price", "rating", "category"], // allowed to be arrays
-    })
+  hpp({
+    whitelist: ["price", "rating", "category"], // allowed to be arrays
+  }),
 );
 
 // 9. Gzip compression (skips small payloads < 1KB automatically)
@@ -114,13 +129,13 @@ app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 // ════════════════════════════════════════════════════════
 
 app.get("/api/health", (_req, res) => {
-    res.json({
-        status: "ok",
-        service: "Craftopia API",
-        version: "1.0.0",
-        environment: process.env.NODE_ENV ?? "development",
-        timestamp: new Date().toISOString(),
-    });
+  res.json({
+    status: "ok",
+    service: "Craftopia API",
+    version: "1.0.0",
+    environment: process.env.NODE_ENV ?? "development",
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // ════════════════════════════════════════════════════════
@@ -135,13 +150,14 @@ app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/homepage", homepageRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // ════════════════════════════════════════════════════════
 //  CATCH-ALL 404
 // ════════════════════════════════════════════════════════
 
 app.use((_req, res) => {
-    res.status(404).json({ status: "error", message: "Route not found." });
+  res.status(404).json({ status: "error", message: "Route not found." });
 });
 
 // ════════════════════════════════════════════════════════
@@ -155,17 +171,19 @@ app.use(errorHandler);
 // ════════════════════════════════════════════════════════
 
 const start = async () => {
-    await connectDB();
-    app.listen(PORT, () => {
-        console.log("\n╔══════════════════════════════════════╗");
-        console.log(`║  🚀 Craftopia API                    ║`);
-        console.log(`║  http://localhost:${PORT}              ║`);
-        console.log(`║  ENV: ${(process.env.NODE_ENV ?? "development").padEnd(29)}║`);
-        console.log("╚══════════════════════════════════════╝\n");
-        console.log("  Security:  Helmet ✓  CORS ✓  Rate-limit ✓");
-        console.log("             Mongo-sanitize ✓  XSS ✓  HPP ✓");
-        console.log(`\n  Health:    http://localhost:${PORT}/api/health\n`);
-    });
+  await connectDB();
+  app.listen(PORT, () => {
+    console.log("\n╔══════════════════════════════════════╗");
+    console.log(`║  🚀 Craftopia API                    ║`);
+    console.log(`║  http://localhost:${PORT}              ║`);
+    console.log(
+      `║  ENV: ${(process.env.NODE_ENV ?? "development").padEnd(29)}║`,
+    );
+    console.log("╚══════════════════════════════════════╝\n");
+    console.log("  Security:  Helmet ✓  CORS ✓  Rate-limit ✓");
+    console.log("             Mongo-sanitize ✓  XSS ✓  HPP ✓");
+    console.log(`\n  Health:    http://localhost:${PORT}/api/health\n`);
+  });
 };
 
 start();

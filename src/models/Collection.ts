@@ -42,7 +42,7 @@ const collectionSchema = new Schema<ICollection>(
 );
 
 // Indexes for common query patterns
-collectionSchema.index({ slug: 1 });
+// Note: slug already has unique index from schema definition
 collectionSchema.index({ status: 1 });
 collectionSchema.index({ isFeatured: 1 });
 collectionSchema.index({ showOnHomepage: 1 });

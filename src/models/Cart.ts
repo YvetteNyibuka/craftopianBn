@@ -60,6 +60,6 @@ cartSchema.virtual("itemCount").get(function (this: ICart) {
     return this.items.reduce((sum: number, item: ICartItem) => sum + item.quantity, 0);
 });
 
-cartSchema.index({ user: 1 });
+// Note: user already has unique index from schema definition
 
 export const Cart = model<ICart>("Cart", cartSchema);

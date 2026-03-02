@@ -102,7 +102,7 @@ const orderSchema = new Schema<IOrder>(
     next();
 });
 
-orderSchema.index({ orderNumber: 1 });
+// Note: orderNumber already has unique index from schema definition
 orderSchema.index({ customer: 1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ createdAt: -1 });

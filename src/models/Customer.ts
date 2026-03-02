@@ -41,7 +41,7 @@ const customerSchema = new Schema<ICustomer>(
     { timestamps: true }
 );
 
-customerSchema.index({ email: 1 });
+// Note: email already has unique index from schema definition
 customerSchema.index({ status: 1 });
 customerSchema.index({ totalSpent: -1 });
 customerSchema.index({ name: "text", email: "text" }); // full-text search
