@@ -87,7 +87,6 @@ const productSchema = new Schema<IProduct>(
   { timestamps: true },
 );
 
-// Note: slug already has unique index from schema definition
 productSchema.index({ category: 1 });
 productSchema.index({ collection: 1 });
 productSchema.index({ isActive: 1 });
