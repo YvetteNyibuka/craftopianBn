@@ -51,7 +51,6 @@ const cartSchema = new Schema<ICart>(
   },
 );
 
-// Virtuals — using function keyword so `this` is the document
 cartSchema.virtual("subtotal").get(function (this: ICart) {
   return this.items.reduce(
     (sum: number, item: ICartItem) => sum + item.price * item.quantity,
