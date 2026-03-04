@@ -89,8 +89,22 @@ app.use(
   }),
 );
 
-// 4. Global rate limiter — applies to every route (300 req / 15 min / IP)
+// 4. Global rate limiter — applies to API routes (300 req / 15 min / IP)
 app.use("/api", apiLimiter);
+app.use(
+  [
+    "/auth",
+    "/users",
+    "/cart",
+    "/collections",
+    "/products",
+    "/orders",
+    "/customers",
+    "/homepage",
+    "/upload",
+  ],
+  apiLimiter,
+);
 
 // 5. Body parsing (before sanitisation)
 app.use(express.json({ limit: "10mb" }));
@@ -136,6 +150,7 @@ app.get("/api/health", (_req, res) => {
 //  API ROUTES
 // ════════════════════════════════════════════════════════
 
+// Mount routes with /api prefix
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/cart", cartRoutes);
@@ -145,6 +160,17 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/homepage", homepageRoutes);
 app.use("/api/upload", uploadRoutes);
+
+// Also mount routes without /api prefix for backwards compatibility
+app.use("/auth", authRoutes);
+app.use("/users", userRoutes);
+app.use("/cart", cartRoutes);
+app.use("/collections", collectionRoutes);
+app.use("/products", productRoutes);
+app.use("/orders", orderRoutes);
+app.use("/customers", customerRoutes);
+app.use("/homepage", homepageRoutes);
+app.use("/upload", uploadRoutes);
 
 // ════════════════════════════════════════════════════════
 //  CATCH-ALL 404
