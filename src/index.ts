@@ -59,7 +59,9 @@ const ALLOWED_ORIGINS = [
 
 // Add custom origins from env if provided
 if (process.env.CLIENT_URL) {
-  ALLOWED_ORIGINS.push(...process.env.CLIENT_URL.split(",").map((o) => o.trim()));
+  ALLOWED_ORIGINS.push(
+    ...process.env.CLIENT_URL.split(",").map((o) => o.trim()),
+  );
 }
 
 app.use(
