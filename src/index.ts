@@ -53,7 +53,10 @@ app.use(
 //    Dev:  localhost on any port + any private LAN IP
 //    Prod: strict whitelist from CLIENT_URL (comma-separated)
 
-const ALLOWED_ORIGINS = (process.env.CLIENT_URL ?? "http://localhost:3002")
+const ALLOWED_ORIGINS = (
+  process.env.CLIENT_URL ??
+  "http://localhost:3002,https://craftopia-arts.netlify.app"
+)
   .split(",")
   .map((o) => o.trim());
 
