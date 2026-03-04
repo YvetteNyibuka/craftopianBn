@@ -50,22 +50,17 @@ app.use(
 );
 
 // 3. CORS — allow frontend origin(s)
-//    Dev:  localhost on any port + any private LAN IP
-//    Prod: strict whitelist from CLIENT_URL (comma-separated)
+const ALLOWED_ORIGINS = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://localhost:3002",
+  "https://craftopia-arts.netlify.app",
+];
 
-const ALLOWED_ORIGINS = (
-  process.env.CLIENT_URL ??
-  "http://localhost:3002,https://craftopia-arts.netlify.app"
-)
-  .split(",")
-  .map((o) => o.trim());
-
-const isDev = process.env.NODE_ENV !== "production";
-
-// Private LAN pattern: 192.168.x.x | 10.x.x.x | 172.16-31.x.x
-const LAN_PATTERN =
-  /^https?:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
-const LOCALHOST_PATTERN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+// Add custom origins from env if provided
+if (process.env.CLIENT_URL) {
+  ALLOWED_ORIGINS.push(...process.env.CLIENT_URL.split(",").map((o) => o.trim()));
+}
 
 app.use(
   cors({
@@ -74,14 +69,8 @@ app.use(
       if (!requestOrigin) return callback(null, true);
       // Explicit whitelist
       if (ALLOWED_ORIGINS.includes(requestOrigin)) return callback(null, true);
-      // Dev: also allow localhost + LAN IPs
-      if (
-        isDev &&
-        (LOCALHOST_PATTERN.test(requestOrigin) ||
-          LAN_PATTERN.test(requestOrigin))
-      ) {
-        return callback(null, true);
-      }
+      // Reject unknown origins
+      console.log(`❌ CORS blocked origin: ${requestOrigin}`);
       callback(new Error(`CORS: origin '${requestOrigin}' not allowed`));
     },
     credentials: true,
