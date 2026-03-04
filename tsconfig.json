@@ -5,6 +5,9 @@
         "lib": [
             "ES2020"
         ],
+        "types": [
+            "node"
+        ],
         "outDir": "./dist",
         "rootDir": "./src",
         "strict": true,
@@ -15,6 +18,7 @@
         "declaration": true,
         "declarationMap": true,
         "sourceMap": true,
+        "moduleResolution": "node",
         "baseUrl": ".",
         "paths": {
             "@/*": [
